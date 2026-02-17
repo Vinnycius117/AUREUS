@@ -24,6 +24,29 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+
+  // ── Load subscription status ──────────────────────────────────────
+  const loadSubscription = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('status, plan_type')
+      .eq('user_id', user.id)
+      .single();
+
+    if (data && data.status === 'active' && data.plan_type === 'pro') {
+      setIsPro(true);
+    } else {
+      setIsPro(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadSubscription();
+    }
+  }, [user, loadSubscription]);
 
   // ── Auth listener ──────────────────────────────────────────────────
   useEffect(() => {
@@ -194,7 +217,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background-dark text-slate-100 font-sans">
-      <Sidebar currentView={currentView} setView={setCurrentView} onLogout={handleLogout} user={user} />
+      <Sidebar currentView={currentView} setView={setCurrentView} onLogout={handleLogout} user={user} isPro={isPro} />
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {dataLoading ? (
           <div className="flex-1 flex items-center justify-center">

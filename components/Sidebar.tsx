@@ -9,9 +9,10 @@ interface SidebarProps {
   setView: (view: ViewType) => void;
   onLogout?: () => void;
   user?: User | null;
+  isPro?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user, isPro }) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(
     user?.user_metadata?.avatar_url || null
   );
@@ -105,6 +106,38 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user 
     }
   };
 
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    if (!user) return;
+    setCheckoutLoading(true);
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: 'price_placeholder', // User needs to replace this
+          userId: user.id,
+        }),
+      });
+
+      const { url } = await response.json();
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('Erro ao iniciar checkout. Verifique sua conexão.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   return (
     <aside className="w-20 lg:w-64 border-r border-charcoal bg-card-dark flex flex-col items-center lg:items-start py-8 transition-all duration-300 h-screen sticky top-0">
       <div className="px-6 mb-12 flex items-center gap-4">
@@ -138,36 +171,46 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user 
 
       <div className="mt-auto px-4 w-full">
         {/* 🔥 AUREUS PRO — Strategic CTA */}
-        <div className="hidden lg:block mb-4">
-          <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card-dark to-primary/5 p-4">
-            {/* Decorative shimmer */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse pointer-events-none"></div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-icons text-primary text-lg">workspace_premium</span>
-                <p className="text-[10px] text-primary uppercase tracking-widest font-bold">Aureus PRO</p>
+        {!isPro && (
+          <div className="hidden lg:block mb-4">
+            <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-card-dark to-primary/5 p-4">
+              {/* Decorative shimmer */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent animate-pulse pointer-events-none"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-icons text-primary text-lg">workspace_premium</span>
+                  <p className="text-[10px] text-primary uppercase tracking-widest font-bold">Aureus PRO</p>
+                </div>
+                <p className="text-xs text-slate-300 mb-3 leading-relaxed">
+                  Desbloqueie relatórios avançados, consultoria exclusiva e muito mais.
+                </p>
+                <button
+                  onClick={handleSubscribe}
+                  disabled={checkoutLoading}
+                  className="w-full py-2.5 bg-gradient-to-r from-primary to-gold-light hover:from-primary hover:to-primary text-background-dark text-[11px] font-bold rounded-lg uppercase tracking-wider transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {checkoutLoading ? 'Processando...' : '✦ Assinar AUREUS PRO'}
+                </button>
               </div>
-              <p className="text-xs text-slate-300 mb-3 leading-relaxed">
-                Desbloqueie relatórios avançados, consultoria exclusiva e muito mais.
-              </p>
-              <button
-                className="w-full py-2.5 bg-gradient-to-r from-primary to-gold-light hover:from-primary hover:to-primary text-background-dark text-[11px] font-bold rounded-lg uppercase tracking-wider transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                ✦ Assinar AUREUS PRO
-              </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Mobile PRO button */}
-        <div className="lg:hidden flex justify-center mb-4">
-          <button
-            className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 flex items-center justify-center hover:from-primary/30 hover:to-primary/20 transition-all group"
-            title="Assinar AUREUS PRO"
-          >
-            <span className="material-icons text-primary text-xl group-hover:scale-110 transition-transform">workspace_premium</span>
-          </button>
-        </div>
+        {!isPro && (
+          <div className="lg:hidden flex justify-center mb-4">
+            <button
+              onClick={handleSubscribe}
+              disabled={checkoutLoading}
+              className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 flex items-center justify-center hover:from-primary/30 hover:to-primary/20 transition-all group disabled:opacity-50"
+              title="Assinar AUREUS PRO"
+            >
+              <span className="material-icons text-primary text-xl group-hover:scale-110 transition-transform">
+                {checkoutLoading ? 'sync' : 'workspace_premium'}
+              </span>
+            </button>
+          </div>
+        )}
 
 
 
