@@ -121,6 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user,
         body: JSON.stringify({
           priceId: 'price_1T1rUP0QzgIppEKcwUClOTR6',
           userId: user.id,
+          email: user.email,
         }),
       });
 
