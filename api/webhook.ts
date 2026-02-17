@@ -39,9 +39,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     stripe_customer_id: session.customer as string,
                     stripe_subscription_id: session.subscription as string,
                     status: 'active',
-                    plan_type: 'pro', // Based on the priceId logic
-                    current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Mocking 30 days
-                });
+                    plan_type: 'pro',
+                    current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                }, { onConflict: 'user_id' });
             }
         }
 
