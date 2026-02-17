@@ -1,0 +1,51 @@
+{
+    "common": {
+        "attention": "Atención",
+        "fullName": "Nombre Completo",
+        "email": "Correo Electrónico",
+        "password": "Contraseña",
+        "confirmPassword": "Confirmar Contraseña",
+        "namePlaceholder": "Su nombre completo",
+        "emailPlaceholder": "su@correo.com",
+        "passwordPlaceholder": "••••••••",
+        "terms": "Términos",
+        "privacy": "Privacidad",
+        "and": "y",
+        "loading": "Cargando..."
+    },
+    "login": {
+        "title": "Bienvenido de nuevo",
+        "subtitle": "Acceda a su cuenta para gestionar su patrimonio",
+        "forgotPassword": "Olvidé mi contraseña",
+        "submit": "Entrar",
+        "noAccount": "¿Aún no tienes cuenta?",
+        "register": "Regístrate",
+        "errors": {
+            "emailRequired": "El correo es obligatorio.",
+            "emailInvalid": "Formato de correo inválido. Ej: nombre@wealth.com",
+            "passwordRequired": "La contraseña es obligatoria.",
+            "passwordLength": "La contraseña debe tener al menos 6 caracteres."
+        }
+    },
+    "register": {
+        "title": "Inicie su Viaje",
+        "subtitle": "Gestión de patrimonio al siguiente nivel.",
+        "submit": "Crear Cuenta",
+        "agreement": "Al crear una cuenta, aceptas nuestros",
+        "hasAccount": "¿Ya tienes una cuenta?",
+        "login": "Entra aquí",
+        "errors": {
+            "nameRequired": "Nombre es obligatorio.",
+            "emailRequired": "El correo es obligatorio.",
+            "emailInvalid": "Ingrese una dirección de correo válida.",
+            "passwordMin": "Mínimo 8 caracteres.",
+            "passwordsMatch": "Las contraseñas no coinciden."
+        },
+        "success": {
+            "title": "Verificando su identidad",
+            "message": "Hemos enviado un enlace de confirmación a su correo electrónico. Valide sua cuenta para continuar.",
+            "spamNotice": "Si no lo encuentras en tu bandeja de entrada, revisa tu carpeta de spam.",
+            "confirm": "Entendido"
+        }
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "common": {
+        "attention": "Atenção",
+        "fullName": "Nome Completo",
+        "email": "E-mail",
+        "password": "Senha",
+        "confirmPassword": "Confirmar Senha",
+        "namePlaceholder": "Seu nome completo",
+        "emailPlaceholder": "seu@email.com",
+        "passwordPlaceholder": "••••••••",
+        "terms": "Termos",
+        "privacy": "Privacidade",
+        "and": "e",
+        "loading": "Carregando..."
+    },
+    "login": {
+        "title": "Bem-vindo de volta",
+        "subtitle": "Acesse sua conta para gerenciar seu patrimônio",
+        "forgotPassword": "Esqueci minha senha",
+        "submit": "Entrar",
+        "noAccount": "Ainda não tem conta?",
+        "register": "Cadastre-se",
+        "errors": {
+            "emailRequired": "O e-mail é obrigatório.",
+            "emailInvalid": "Formato de e-mail inválido. Ex: nome@wealth.com",
+            "passwordRequired": "A senha é obrigatória.",
+            "passwordLength": "A senha deve ter pelo menos 6 caracteres."
+        }
+    },
+    "register": {
+        "title": "Inicie sua Jornada",
+        "subtitle": "Gestão de patrimônio para o próximo nível.",
+        "submit": "Criar Conta",
+        "agreement": "Ao criar uma conta, você concorda com nossos",
+        "hasAccount": "Já possui uma conta?",
+        "login": "Entre aqui",
+        "errors": {
+            "nameRequired": "Nome é obrigatório.",
+            "emailRequired": "O e-mail é obrigatório.",
+            "emailInvalid": "Informe um endereço de e-mail válido.",
+            "passwordMin": "Mínimo de 8 caracteres.",
+            "passwordsMatch": "As senhas não coincidem."
+        },
+        "success": {
+            "title": "Verificando sua identidade",
+            "message": "Enviamos um link de confirmação para seu e-mail. Por favor, valide sua conta para continuar.",
+            "spamNotice": "Se não encontrar na caixa de entrada, verifique a pasta de spam.",
+            "confirm": "Entendido"
+        }
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "common": {
+        "attention": "Attention",
+        "fullName": "Full Name",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "namePlaceholder": "Your full name",
+        "emailPlaceholder": "your@email.com",
+        "passwordPlaceholder": "••••••••",
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "and": "and",
+        "loading": "Loading..."
+    },
+    "login": {
+        "title": "Welcome back",
+        "subtitle": "Access your account to manage your wealth",
+        "forgotPassword": "Forgot my password",
+        "submit": "Sign In",
+        "noAccount": "Don't have an account yet?",
+        "register": "Sign up",
+        "errors": {
+            "emailRequired": "Email is required.",
+            "emailInvalid": "Invalid email format. Ex: name@wealth.com",
+            "passwordRequired": "Password is required.",
+            "passwordLength": "Password must be at least 6 characters."
+        }
+    },
+    "register": {
+        "title": "Start your Journey",
+        "subtitle": "Wealth management to the next level.",
+        "submit": "Create Account",
+        "agreement": "By creating an account, you agree to our",
+        "hasAccount": "Already have an account?",
+        "login": "Login here",
+        "errors": {
+            "nameRequired": "Name is required.",
+            "emailRequired": "Email is required.",
+            "emailInvalid": "Enter a valid email address.",
+            "passwordMin": "Minimum 8 characters.",
+            "passwordsMatch": "Passwords do not match."
+        },
+        "success": {
+            "title": "Verifying your identity",
+            "message": "We have sent a confirmation link to your email. Please validate your account to continue.",
+            "spamNotice": "If you can't find it in your inbox, check your spam folder.",
+            "confirm": "Understood"
+        }
+    }
+}
