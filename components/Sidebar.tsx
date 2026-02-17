@@ -124,15 +124,20 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user,
         }),
       });
 
-      const { url } = await response.json();
-      if (url) {
-        window.location.href = url;
-      } else {
-        throw new Error('No checkout URL received');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro no servidor do Stripe');
       }
-    } catch (err) {
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('URL de checkout não recebida');
+      }
+    } catch (err: any) {
       console.error('Checkout error:', err);
-      alert('Erro ao iniciar checkout. Verifique sua conexão.');
+      alert(`Erro ao iniciar checkout: ${err.message}`);
     } finally {
       setCheckoutLoading(false);
     }

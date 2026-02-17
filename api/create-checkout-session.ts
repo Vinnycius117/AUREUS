@@ -9,6 +9,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'POST') {
         try {
             const { priceId, userId } = req.body;
+            console.log('Initiating checkout for:', { priceId, userId });
+
+            if (!priceId || !userId) {
+                return res.status(400).json({ message: 'priceId e userId são obrigatórios' });
+            }
+
+            if (!process.env.STRIPE_SECRET_KEY) {
+                console.error('STRIPE_SECRET_KEY is missing');
+                return res.status(500).json({ message: 'Configuração do Stripe incompleta no servidor' });
+            }
 
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
@@ -26,8 +36,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 },
             });
 
+            console.log('Session created:', session.id);
             res.status(200).json({ url: session.url });
         } catch (err: any) {
+            console.error('Stripe Session Error:', err);
             res.status(500).json({ statusCode: 500, message: err.message });
         }
     } else {
