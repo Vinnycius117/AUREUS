@@ -119,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: 'price_placeholder', // User needs to replace this
+          priceId: 'price_1T1rUP0QzgIppEKcwUClOTR6',
           userId: user.id,
         }),
       });
