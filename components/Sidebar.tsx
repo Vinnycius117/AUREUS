@@ -119,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: 'price_1T1rUP0QzgIppEKcwUClOTR6',
+          priceId: import.meta.env.VITE_STRIPE_PRICE_ID || 'price_1T1rUP0QzgIppEKcwUClOTR6',
           userId: user.id,
           email: user.email,
         }),

@@ -33,7 +33,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
 
     // ── Subscription state ──
     const [cancelLoading, setCancelLoading] = useState(false);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [cancelMessage, setCancelMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
 
     // ── Notifications state ──
     const [notifEmail, setNotifEmail] = useState(true);
@@ -100,8 +102,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
     };
 
     const handleCancelSubscription = async () => {
-        if (!confirm('Tem certeza que deseja cancelar sua assinatura AUREUS PRO? Você perderá acesso aos recursos premium no final do período atual.')) return;
-
+        setShowCancelModal(false);
         setCancelLoading(true);
         setCancelMessage(null);
 
@@ -140,6 +141,34 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
         }
 
         setCancelLoading(false);
+    };
+
+    const handleSubscribe = async () => {
+        setCheckoutLoading(true);
+        try {
+            const response = await fetch('/api/create-checkout-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    priceId: import.meta.env.VITE_STRIPE_PRICE_ID || 'price_1T1rUP0QzgIppEKcwUClOTR6',
+                    userId: user.id,
+                    email: user.email,
+                }),
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Erro no servidor do Stripe');
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error('URL de checkout não recebida');
+            }
+        } catch (err: any) {
+            console.error('Checkout error:', err);
+            alert(`Erro ao iniciar checkout: ${err.message}`);
+        } finally {
+            setCheckoutLoading(false);
+        }
     };
 
     // ── Message Component ─────────────────────────────────────────────
@@ -346,7 +375,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
                             {/* Cancel Button */}
                             <div className="pt-4 border-t border-white/5">
                                 <button
-                                    onClick={handleCancelSubscription}
+                                    onClick={() => setShowCancelModal(true)}
                                     disabled={cancelLoading}
                                     className="flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-wider text-rose-400 bg-rose-500/5 border border-rose-500/20 rounded-xl hover:bg-rose-500/10 hover:border-rose-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
@@ -378,8 +407,12 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
                                 ))}
                             </ul>
 
-                            <button className="px-8 py-3.5 bg-gradient-to-r from-primary to-gold-light hover:from-primary hover:to-primary text-background-dark font-bold rounded-xl uppercase tracking-wider text-xs transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:scale-[1.02] active:scale-[0.98]">
-                                ✦ Assinar agora por R$ 29,90/mês
+                            <button
+                                onClick={handleSubscribe}
+                                disabled={checkoutLoading}
+                                className="px-8 py-3.5 bg-gradient-to-r from-primary to-gold-light hover:from-primary hover:to-primary text-background-dark font-bold rounded-xl uppercase tracking-wider text-xs transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                            >
+                                {checkoutLoading ? '✦ Processando...' : '✦ Assinar agora por R$ 29,90/mês'}
                             </button>
                         </>
                     )}
@@ -440,6 +473,49 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
         }
     };
 
+    // ── Cancellation Modal Component ──────────────────────────────────
+    const CancelModal = () => (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setShowCancelModal(false)}
+            ></div>
+
+            {/* Modal Content */}
+            <div className="relative w-full max-w-md bg-card-dark border border-white/10 rounded-3xl p-8 shadow-2xl shadow-black/50 animate-in zoom-in-95 duration-300 overflow-hidden">
+                {/* Background Glow */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-rose-500/10 blur-[80px] rounded-full"></div>
+
+                <div className="relative z-10 text-center">
+                    <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
+                        <span className="material-icons text-3xl text-rose-400">warning_amber</span>
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Tem certeza?</h3>
+                    <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                        Ao cancelar sua assinatura <span className="text-primary font-bold">AUREUS PRO</span>, você perderá acesso aos insights exclusivos, relatórios premium e consultoria direta no final do ciclo atual.
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-3">
+                        <button
+                            onClick={() => setShowCancelModal(false)}
+                            className="w-full py-4 bg-primary hover:bg-[#B59844] text-background-dark font-bold rounded-xl transition-all duration-300 transform active:scale-[0.98] shadow-lg shadow-primary/10"
+                        >
+                            MANTER MEU PLANO PRO
+                        </button>
+                        <button
+                            onClick={handleCancelSubscription}
+                            className="w-full py-3.5 text-xs font-bold text-rose-400 hover:text-rose-300 transition-colors uppercase tracking-widest"
+                        >
+                            Confirmar Cancelamento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="flex-1 bg-background-dark overflow-y-auto custom-scrollbar">
             <div className="max-w-4xl mx-auto px-6 py-12">
@@ -494,6 +570,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
                     </div>
                 </div>
             </div>
+
+            {showCancelModal && <CancelModal />}
         </div>
     );
 };
