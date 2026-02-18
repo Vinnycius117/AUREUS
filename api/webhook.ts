@@ -33,8 +33,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const session = event.data.object as Stripe.Checkout.Session;
             const userId = session.metadata?.userId;
 
+            if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+                console.error('❌ SUPABASE_SERVICE_ROLE_KEY is not set! Cannot activate subscription.');
+                return res.status(500).json({ error: 'Server configuration error' });
+            }
+
             if (userId) {
-                await supabase.from('subscriptions').upsert({
+                const { error } = await supabase.from('subscriptions').upsert({
                     user_id: userId,
                     stripe_customer_id: session.customer as string,
                     stripe_subscription_id: session.subscription as string,
@@ -42,6 +47,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     plan_type: 'pro',
                     current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
                 }, { onConflict: 'user_id' });
+
+                if (error) {
+                    console.error('❌ Supabase upsert failed:', error);
+                    return res.status(500).json({ error: 'Failed to activate subscription' });
+                }
+
+                console.log(`✅ Webhook: Subscription activated for user ${userId}`);
+            } else {
+                console.warn('⚠️ Webhook: No userId in session metadata');
             }
         }
 

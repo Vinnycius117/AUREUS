@@ -35,6 +35,10 @@ const App: React.FC = () => {
       .eq('user_id', user.id)
       .single();
 
+    if (error && error.code !== 'PGRST116') {
+      console.error('Subscription check error:', error.message);
+    }
+
     if (data && data.status === 'active' && data.plan_type === 'pro') {
       setIsPro(true);
     } else {
@@ -42,11 +46,51 @@ const App: React.FC = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (user) {
-      loadSubscription();
+  // ── Verify Stripe session after checkout redirect ─────────────────
+  const verifyStripeSession = useCallback(async () => {
+    if (!user) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    if (!sessionId) return;
+
+    // Clean up URL immediately
+    window.history.replaceState({}, '', window.location.pathname);
+
+    try {
+      const response = await fetch('/api/verify-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, userId: user.id }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setIsPro(true);
+        console.log('✅ AUREUS PRO ativado com sucesso!');
+      } else {
+        console.error('Verify session failed:', result.message);
+        // Still try loading from DB in case webhook already handled it
+        await loadSubscription();
+      }
+    } catch (err) {
+      console.error('Error verifying session:', err);
+      await loadSubscription();
     }
   }, [user, loadSubscription]);
+
+  useEffect(() => {
+    if (user) {
+      // Check for Stripe redirect first, then load subscription
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('session_id')) {
+        verifyStripeSession();
+      } else {
+        loadSubscription();
+      }
+    }
+  }, [user, loadSubscription, verifyStripeSession]);
 
   // ── Auth listener ──────────────────────────────────────────────────
   useEffect(() => {
