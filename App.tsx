@@ -66,17 +66,19 @@ const App: React.FC = () => {
   const loadTransactions = useCallback(async () => {
     if (!user) return;
 
-    // Load from cache first for zero-latency startup
+    setDataLoading(true);
+
+    // Show cached data instantly while fetching from server
     const cached = localStorage.getItem(`aureus_tx_${user.id}`);
-    if (cached && transactions.length === 0) {
+    if (cached) {
       try {
         setTransactions(JSON.parse(cached));
       } catch (e) {
-        console.error('Cache error:', e);
+        console.error('Cache parse error:', e);
       }
     }
 
-    setDataLoading(true);
+    // Always fetch the authoritative data from Supabase
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
@@ -85,19 +87,18 @@ const App: React.FC = () => {
 
     if (error) {
       console.error('Supabase fetch error:', error.message);
-      // Don't clear transactions here if we have cached data,
-      // but warn the user.
-      if (transactions.length === 0 && !cached) {
+      // If no cached data either, show empty state
+      if (!cached) {
         setTransactions([]);
       }
     } else {
       setTransactions(data || []);
-      // Sync cache
+      // Update local cache with server data
       localStorage.setItem(`aureus_tx_${user.id}`, JSON.stringify(data || []));
     }
 
     setDataLoading(false);
-  }, [user, transactions.length]);
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -105,7 +106,8 @@ const App: React.FC = () => {
     } else {
       setTransactions([]);
     }
-  }, [user, loadTransactions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   // ── Save transaction ──────────────────────────────────────────────
   const handleAddTransaction = async (newTx: Transaction) => {
