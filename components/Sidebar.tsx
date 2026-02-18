@@ -110,6 +110,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, onLogout, user,
 
   const handleSubscribe = async () => {
     if (!user) return;
+
+    if (!import.meta.env.VITE_STRIPE_PRICE_ID) {
+      alert('Erro: O ID do plano (VITE_STRIPE_PRICE_ID) não foi configurado no Vercel. Por favor, adicione-o nas configurações do projeto.');
+      return;
+    }
+
     setCheckoutLoading(true);
 
     try {
