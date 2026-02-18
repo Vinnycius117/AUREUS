@@ -7,9 +7,10 @@ import type { User } from '@supabase/supabase-js';
 
 interface SettingsScreenProps {
     user: User;
+    isPro?: boolean;
 }
 
-const SettingsScreen: React.FC<SettingsScreenProps> = ({ user }) => {
+const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
     const { t } = useTranslation();
     const [name, setName] = useState(user.user_metadata?.full_name || '');
     const [email] = useState(user.email || '');
@@ -57,9 +58,9 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user }) => {
                                 </div>
                                 <h2 className="text-lg font-bold text-white mb-1">{user.user_metadata?.full_name || 'Usuário'}</h2>
                                 <p className="text-xs text-slate-400 mb-4">{user.email}</p>
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 rounded-full">
-                                    <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                                    <span className="text-[10px] text-primary font-bold uppercase tracking-widest">Plano Free</span>
+                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${isPro ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-primary/10 border border-primary/20'}`}>
+                                    <span className={`w-2 h-2 rounded-full animate-pulse ${isPro ? 'bg-emerald-500' : 'bg-primary'}`}></span>
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isPro ? 'text-emerald-400' : 'text-primary'}`}>{isPro ? 'Plano PRO' : 'Plano Free'}</span>
                                 </div>
                             </div>
                         </section>
@@ -118,36 +119,65 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user }) => {
                             </form>
                         </section>
 
-                        {/* Subscription Card (CTA) */}
-                        <section className="relative overflow-hidden group rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/20 via-card-dark to-black p-8 shadow-2xl shadow-primary/5">
+                        {/* Subscription Card */}
+                        <section className={`relative overflow-hidden group rounded-2xl border p-8 shadow-2xl ${isPro ? 'border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 via-card-dark to-black shadow-emerald-500/5' : 'border-primary/30 bg-gradient-to-br from-primary/20 via-card-dark to-black shadow-primary/5'}`}>
                             {/* Decorative Sparkles */}
                             <div className="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-40 transition-opacity">
-                                <span className="material-icons text-5xl text-primary">auto_awesome</span>
+                                <span className={`material-icons text-5xl ${isPro ? 'text-emerald-400' : 'text-primary'}`}>auto_awesome</span>
                             </div>
 
                             <div className="relative z-10">
                                 <h3 className="text-2xl font-bold text-white mb-4">AUREUS PRO</h3>
-                                <p className="text-slate-300 text-sm mb-6 max-w-md leading-relaxed">
-                                    Eleve seu patamar financeiro. Tenha acesso a relatórios consolidados de alta precisão, suporte prioritário e insights exclusivos do mercado.
-                                </p>
 
-                                <ul className="space-y-3 mb-8">
-                                    {[
-                                        'Relatórios PDF personalizados ilimitados',
-                                        'Análise de tendências em tempo real',
-                                        'Suporte direto por chat com consultores',
-                                        'Exportação avançada de dados (CSV/Excel)'
-                                    ].map((feature) => (
-                                        <li key={feature} className="flex items-center gap-3 text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
-                                            <span className="material-icons text-primary text-base">verified</span>
-                                            {feature}
-                                        </li>
-                                    ))}
-                                </ul>
+                                {isPro ? (
+                                    <>
+                                        <div className="flex items-center gap-3 mb-6">
+                                            <span className="material-icons text-emerald-400 text-3xl">verified</span>
+                                            <div>
+                                                <p className="text-emerald-400 font-bold text-sm uppercase tracking-wider">Assinatura Ativa</p>
+                                                <p className="text-slate-400 text-xs">Você tem acesso a todos os recursos premium.</p>
+                                            </div>
+                                        </div>
 
-                                <button className="px-8 py-3.5 bg-gradient-to-r from-primary to-gold-light hover:from-primary hover:to-primary text-background-dark font-bold rounded-xl uppercase tracking-wider text-xs transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:scale-[1.02] active:scale-[0.98]">
-                                    ✦ Assinar agora por R$ 29,90/mês
-                                </button>
+                                        <ul className="space-y-3">
+                                            {[
+                                                'Relatórios PDF personalizados ilimitados',
+                                                'Análise de tendências em tempo real',
+                                                'Suporte direto por chat com consultores',
+                                                'Exportação avançada de dados (CSV/Excel)'
+                                            ].map((feature) => (
+                                                <li key={feature} className="flex items-center gap-3 text-sm text-slate-300">
+                                                    <span className="material-icons text-emerald-400 text-base">check_circle</span>
+                                                    {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="text-slate-300 text-sm mb-6 max-w-md leading-relaxed">
+                                            Eleve seu patamar financeiro. Tenha acesso a relatórios consolidados de alta precisão, suporte prioritário e insights exclusivos do mercado.
+                                        </p>
+
+                                        <ul className="space-y-3 mb-8">
+                                            {[
+                                                'Relatórios PDF personalizados ilimitados',
+                                                'Análise de tendências em tempo real',
+                                                'Suporte direto por chat com consultores',
+                                                'Exportação avançada de dados (CSV/Excel)'
+                                            ].map((feature) => (
+                                                <li key={feature} className="flex items-center gap-3 text-sm text-slate-400 group-hover:text-slate-200 transition-colors">
+                                                    <span className="material-icons text-primary text-base">verified</span>
+                                                    {feature}
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        <button className="px-8 py-3.5 bg-gradient-to-r from-primary to-gold-light hover:from-primary hover:to-primary text-background-dark font-bold rounded-xl uppercase tracking-wider text-xs transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 transform hover:scale-[1.02] active:scale-[0.98]">
+                                            ✦ Assinar agora por R$ 29,90/mês
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </section>
                     </div>

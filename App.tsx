@@ -241,7 +241,7 @@ const App: React.FC = () => {
           />
         );
       case ViewType.SETTINGS:
-        return <SettingsScreen user={user!} />;
+        return <SettingsScreen user={user!} isPro={isPro} />;
       case ViewType.PORTFOLIO:
         return (
           <div className="flex-1 flex items-center justify-center bg-background-dark text-slate-500">
