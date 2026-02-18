@@ -19,6 +19,17 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
 
   if (!isOpen) return null;
 
+  const setToday = () => {
+    const now = new Date();
+    setSelectedDate(now.toISOString().split('T')[0]);
+  };
+
+  const setYesterday = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    setSelectedDate(yesterday.toISOString().split('T')[0]);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const numAmount = parseFloat(amount.replace(',', '.'));
@@ -122,7 +133,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                   required
                   type="text"
                   inputMode="decimal"
-                  className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 placeholder:text-slate-700 transition-all"
+                  className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 placeholder:text-slate-700 transition-all font-bold"
                   placeholder="0,00"
                   value={amount}
                   onChange={(e) => {
@@ -133,17 +144,41 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
               </div>
             </div>
 
-            {/* Date Picker */}
+            {/* Date Selection Grid */}
             <div>
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Data do Lançamento</label>
+
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={setToday}
+                  className={`py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all ${selectedDate === new Date().toISOString().split('T')[0]
+                      ? 'bg-primary/20 border-primary text-primary'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                    }`}
+                >
+                  Hoje
+                </button>
+                <button
+                  type="button"
+                  onClick={setYesterday}
+                  className={`py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all ${selectedDate === new Date(Date.now() - 86400000).toISOString().split('T')[0]
+                      ? 'bg-primary/20 border-primary text-primary'
+                      : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                    }`}
+                >
+                  Ontem
+                </button>
+              </div>
+
               <div className="relative group">
-                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors">calendar_month</span>
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors text-lg">calendar_month</span>
                 <input
                   type="date"
                   required
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all [color-scheme:dark]"
+                  className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all [color-scheme:dark]"
                 />
               </div>
             </div>
@@ -153,8 +188,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
             <button
               type="submit"
               className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.15em] text-xs shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${type === 'credit'
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
-                : 'bg-primary hover:bg-primary/90 text-white shadow-primary/20'
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20 shadow-lg'
+                : 'bg-primary hover:bg-primary/90 text-white shadow-primary/20 shadow-lg'
                 }`}
             >
               <span className="material-symbols-outlined">check_circle</span>
