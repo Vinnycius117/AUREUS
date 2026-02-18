@@ -9,6 +9,7 @@ export enum ViewType {
 
 export interface Transaction {
   id: string;
+  user_id?: string;
   details: string;
   reference?: string;
   account: string;

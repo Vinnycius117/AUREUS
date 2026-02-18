@@ -75,17 +75,9 @@ const App: React.FC = () => {
 
     if (error) {
       console.error('Error loading transactions:', error.message);
-      // Fallback: try loading from localStorage
-      const localData = localStorage.getItem(`transactions_${user.id}`);
-      if (localData) {
-        try {
-          setTransactions(JSON.parse(localData));
-        } catch { /* ignore */ }
-      }
+      setTransactions([]);
     } else {
       setTransactions(data || []);
-      // Sync to localStorage as backup
-      localStorage.setItem(`transactions_${user.id}`, JSON.stringify(data || []));
     }
 
     setDataLoading(false);
@@ -112,15 +104,9 @@ const App: React.FC = () => {
 
     if (error) {
       console.error('Error saving transaction:', error.message);
-      // Still keep it locally
+      // Revert optimistic update on error
+      loadTransactions();
     }
-
-    // Sync localStorage backup with the absolute latest state
-    setTransactions(prev => {
-      const updated = [txWithUser, ...prev.filter(t => t.id !== txWithUser.id)];
-      localStorage.setItem(`transactions_${user!.id}`, JSON.stringify(updated));
-      return updated;
-    });
   };
 
   // ── Delete transaction ─────────────────────────────────────────────
@@ -137,14 +123,9 @@ const App: React.FC = () => {
 
       if (error) {
         console.error('Error deleting transaction:', error.message);
+        // Revert optimistic update on error
+        loadTransactions();
       }
-
-      // Sync localStorage backup with the absolute latest state
-      setTransactions(prev => {
-        const updated = prev.filter(t => t.id !== id);
-        localStorage.setItem(`transactions_${user!.id}`, JSON.stringify(updated));
-        return updated;
-      });
     }
   };
 

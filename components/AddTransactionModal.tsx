@@ -23,7 +23,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
     const finalAmount = type === 'debit' ? -Math.abs(numAmount) : Math.abs(numAmount);
 
     const newTx: Transaction = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       details,
       amount: finalAmount,
       account: 'Conta Principal',
@@ -69,8 +69,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
               type="button"
               onClick={() => setType('debit')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${type === 'debit'
-                  ? 'bg-[#2A2A2A] text-white shadow-xl ring-1 ring-white/10'
-                  : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-[#2A2A2A] text-white shadow-xl ring-1 ring-white/10'
+                : 'text-slate-500 hover:text-slate-300'
                 }`}
             >
               <span className={`material-symbols-outlined text-sm ${type === 'debit' ? 'text-rose-400' : ''}`}>trending_down</span>
@@ -80,8 +80,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
               type="button"
               onClick={() => setType('credit')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 ${type === 'credit'
-                  ? 'bg-primary text-white shadow-xl shadow-primary/20'
-                  : 'text-slate-500 hover:text-slate-300'
+                ? 'bg-primary text-white shadow-xl shadow-primary/20'
+                : 'text-slate-500 hover:text-slate-300'
                 }`}
             >
               <span className={`material-symbols-outlined text-sm ${type === 'credit' ? 'text-white' : ''}`}>trending_up</span>
@@ -129,8 +129,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
             <button
               type="submit"
               className={`w-full py-5 rounded-2xl font-black uppercase tracking-[0.15em] text-xs shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${type === 'credit'
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
-                  : 'bg-primary hover:bg-primary/90 text-white shadow-primary/20'
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/20'
+                : 'bg-primary hover:bg-primary/90 text-white shadow-primary/20'
                 }`}
             >
               <span className="material-symbols-outlined">check_circle</span>
