@@ -150,7 +150,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ user, isPro }) => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    priceId: import.meta.env.VITE_STRIPE_PRICE_ID || 'price_1T1rUP0QzgIppEKcwUClOTR6',
+                    priceId: import.meta.env.VITE_STRIPE_PRICE_ID,
                     userId: user.id,
                     email: user.email,
                 }),
