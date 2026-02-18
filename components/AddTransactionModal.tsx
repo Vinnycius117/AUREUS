@@ -12,6 +12,10 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
   const [details, setDetails] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'debit' | 'credit'>('debit');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0]; // YYYY-MM-DD
+  });
 
   if (!isOpen) return null;
 
@@ -22,13 +26,17 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
 
     const finalAmount = type === 'debit' ? -Math.abs(numAmount) : Math.abs(numAmount);
 
+    // Parse the selected date
+    const dateObj = new Date(selectedDate + 'T12:00:00'); // noon to avoid timezone issues
+    const displayDate = dateObj.toLocaleDateString('pt-BR', { month: 'short', day: '2-digit', year: 'numeric' });
+
     const newTx: Transaction = {
       id: crypto.randomUUID(),
       details,
       amount: finalAmount,
       account: 'Conta Principal',
-      date: new Date().toLocaleDateString('pt-BR', { month: 'short', day: '2-digit', year: 'numeric' }),
-      timestamp: Date.now(),
+      date: displayDate,
+      timestamp: dateObj.getTime(),
       icon: type === 'credit' ? 'add_chart' : 'payments',
       type,
       reference: `#LANC-${Math.floor(Math.random() * 9000 + 1000)}`
@@ -38,6 +46,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
     setDetails('');
     setAmount('');
     setType('debit');
+    setSelectedDate(new Date().toISOString().split('T')[0]);
     onClose();
   };
 
@@ -120,6 +129,21 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                     const val = e.target.value.replace(/[^0-9,.]/g, '');
                     setAmount(val);
                   }}
+                />
+              </div>
+            </div>
+
+            {/* Date Picker */}
+            <div>
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Data do Lançamento</label>
+              <div className="relative group">
+                <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors">calendar_month</span>
+                <input
+                  type="date"
+                  required
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full bg-white/[0.03] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all [color-scheme:dark]"
                 />
               </div>
             </div>
