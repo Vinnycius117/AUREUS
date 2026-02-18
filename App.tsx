@@ -62,11 +62,21 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // ── Load transactions from Supabase when user changes ──────────────
+  // ── Load transactions from Supabase ───────────────────────────────
   const loadTransactions = useCallback(async () => {
     if (!user) return;
-    setDataLoading(true);
 
+    // Load from cache first for zero-latency startup
+    const cached = localStorage.getItem(`aureus_tx_${user.id}`);
+    if (cached && transactions.length === 0) {
+      try {
+        setTransactions(JSON.parse(cached));
+      } catch (e) {
+        console.error('Cache error:', e);
+      }
+    }
+
+    setDataLoading(true);
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
@@ -74,14 +84,20 @@ const App: React.FC = () => {
       .order('timestamp', { ascending: false });
 
     if (error) {
-      console.error('Error loading transactions:', error.message);
-      setTransactions([]);
+      console.error('Supabase fetch error:', error.message);
+      // Don't clear transactions here if we have cached data,
+      // but warn the user.
+      if (transactions.length === 0 && !cached) {
+        setTransactions([]);
+      }
     } else {
       setTransactions(data || []);
+      // Sync cache
+      localStorage.setItem(`aureus_tx_${user.id}`, JSON.stringify(data || []));
     }
 
     setDataLoading(false);
-  }, [user]);
+  }, [user, transactions.length]);
 
   useEffect(() => {
     if (user) {
@@ -91,30 +107,43 @@ const App: React.FC = () => {
     }
   }, [user, loadTransactions]);
 
-  // ── Save transaction (Supabase + localStorage backup) ──────────────
+  // ── Save transaction ──────────────────────────────────────────────
   const handleAddTransaction = async (newTx: Transaction) => {
-    const txWithUser = { ...newTx, user_id: user!.id };
+    if (!user) return;
+    const txWithUser = { ...newTx, user_id: user.id };
 
-    // Optimistic update
-    setTransactions(prev => [txWithUser, ...prev]);
+    // 1. Optimistic Update (UI)
+    const updatedTransactions = [txWithUser, ...transactions];
+    setTransactions(updatedTransactions);
 
+    // 2. Persistent Cache Update (Survives reload even if DB fails)
+    localStorage.setItem(`aureus_tx_${user.id}`, JSON.stringify(updatedTransactions));
+
+    // 3. Remote Sync
     const { error } = await supabase
       .from('transactions')
       .insert([txWithUser]);
 
     if (error) {
-      console.error('Error saving transaction:', error.message);
-      // Revert optimistic update on error
-      loadTransactions();
+      console.error('Supabase Save Error:', error.message);
+      alert(`⚠️ Erro ao salvar no banco de dados: ${error.message}\n\nO item foi salvo localmente mas pode não aparecer em outros dispositivos até que o erro seja resolvido.`);
+      // We don't call loadTransactions() here because we want to keep the local data 
+      // even if Supabase failed.
     }
   };
 
   // ── Delete transaction ─────────────────────────────────────────────
   const handleDeleteTransaction = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este lançamento?')) {
-      // Optimistic update
-      setTransactions(prev => prev.filter(t => t.id !== id));
+      const updatedTransactions = transactions.filter(t => t.id !== id);
 
+      // 1. Optimistic Update
+      setTransactions(updatedTransactions);
+
+      // 2. Cache Update
+      localStorage.setItem(`aureus_tx_${user!.id}`, JSON.stringify(updatedTransactions));
+
+      // 3. Remote Delete
       const { error } = await supabase
         .from('transactions')
         .delete()
@@ -123,8 +152,8 @@ const App: React.FC = () => {
 
       if (error) {
         console.error('Error deleting transaction:', error.message);
-        // Revert optimistic update on error
-        loadTransactions();
+        alert(`Erro ao excluir do banco: ${error.message}`);
+        loadTransactions(); // Revert to server state if delete failed
       }
     }
   };
