@@ -4,10 +4,13 @@ import Sidebar from './components/Sidebar';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
 import TransactionsHistory from './components/TransactionsHistory';
 import AddTransactionModal from './components/AddTransactionModal';
+import PortfolioDashboard from './components/PortfolioDashboard';
+import AddAssetModal from './components/AddAssetModal';
+import AddGoalModal from './components/AddGoalModal';
 import SettingsScreen from './components/SettingsScreen';
 import { LoginScreen } from './components/LoginScreen';
 import { RegisterScreen } from './components/RegisterScreen';
-import { ViewType, Transaction } from './types';
+import { ViewType, Transaction, PortfolioAsset, Goal } from './types';
 import { supabase } from './lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
@@ -22,7 +25,11 @@ const App: React.FC = () => {
   // App state
   const [currentView, setCurrentView] = useState<ViewType>(ViewType.ANALYTICS);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [assets, setAssets] = useState<PortfolioAsset[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [isPro, setIsPro] = useState(false);
 
@@ -71,7 +78,6 @@ const App: React.FC = () => {
         console.log('✅ AUREUS PRO ativado com sucesso!');
       } else {
         console.error('Verify session failed:', result.message);
-        // Still try loading from DB in case webhook already handled it
         await loadSubscription();
       }
     } catch (err) {
@@ -82,7 +88,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      // Check for Stripe redirect first, then load subscription
       const params = new URLSearchParams(window.location.search);
       if (params.has('session_id')) {
         verifyStripeSession();
@@ -112,17 +117,11 @@ const App: React.FC = () => {
 
     setDataLoading(true);
 
-    // Show cached data instantly while fetching from server
     const cached = localStorage.getItem(`aureus_tx_${user.id}`);
     if (cached) {
-      try {
-        setTransactions(JSON.parse(cached));
-      } catch (e) {
-        console.error('Cache parse error:', e);
-      }
+      try { setTransactions(JSON.parse(cached)); } catch (e) { console.error('Cache parse error:', e); }
     }
 
-    // Always fetch the authoritative data from Supabase
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
@@ -131,24 +130,72 @@ const App: React.FC = () => {
 
     if (error) {
       console.error('Supabase fetch error:', error.message);
-      // If no cached data either, show empty state
-      if (!cached) {
-        setTransactions([]);
-      }
+      if (!cached) setTransactions([]);
     } else {
       setTransactions(data || []);
-      // Update local cache with server data
       localStorage.setItem(`aureus_tx_${user.id}`, JSON.stringify(data || []));
     }
 
     setDataLoading(false);
   }, [user]);
 
+  // ── Load assets from Supabase ─────────────────────────────────────
+  const loadAssets = useCallback(async () => {
+    if (!user) return;
+
+    const cached = localStorage.getItem(`aureus_assets_${user.id}`);
+    if (cached) {
+      try { setAssets(JSON.parse(cached)); } catch (e) { console.error('Assets cache error:', e); }
+    }
+
+    const { data, error } = await supabase
+      .from('assets')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Assets fetch error:', error.message);
+      if (!cached) setAssets([]);
+    } else {
+      setAssets(data || []);
+      localStorage.setItem(`aureus_assets_${user.id}`, JSON.stringify(data || []));
+    }
+  }, [user]);
+
+  // ── Load goals from Supabase ──────────────────────────────────────
+  const loadGoals = useCallback(async () => {
+    if (!user) return;
+
+    const cached = localStorage.getItem(`aureus_goals_${user.id}`);
+    if (cached) {
+      try { setGoals(JSON.parse(cached)); } catch (e) { console.error('Goals cache error:', e); }
+    }
+
+    const { data, error } = await supabase
+      .from('goals')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Goals fetch error:', error.message);
+      if (!cached) setGoals([]);
+    } else {
+      setGoals(data || []);
+      localStorage.setItem(`aureus_goals_${user.id}`, JSON.stringify(data || []));
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       loadTransactions();
+      loadAssets();
+      loadGoals();
     } else {
       setTransactions([]);
+      setAssets([]);
+      setGoals([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -158,23 +205,15 @@ const App: React.FC = () => {
     if (!user) return;
     const txWithUser = { ...newTx, user_id: user.id };
 
-    // 1. Optimistic Update (UI)
     const updatedTransactions = [txWithUser, ...transactions];
     setTransactions(updatedTransactions);
-
-    // 2. Persistent Cache Update (Survives reload even if DB fails)
     localStorage.setItem(`aureus_tx_${user.id}`, JSON.stringify(updatedTransactions));
 
-    // 3. Remote Sync
-    const { error } = await supabase
-      .from('transactions')
-      .insert([txWithUser]);
+    const { error } = await supabase.from('transactions').insert([txWithUser]);
 
     if (error) {
       console.error('Supabase Save Error:', error.message);
       alert(`⚠️ Erro ao salvar no banco de dados: ${error.message}\n\nO item foi salvo localmente mas pode não aparecer em outros dispositivos até que o erro seja resolvido.`);
-      // We don't call loadTransactions() here because we want to keep the local data 
-      // even if Supabase failed.
     }
   };
 
@@ -182,24 +221,78 @@ const App: React.FC = () => {
   const handleDeleteTransaction = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este lançamento?')) {
       const updatedTransactions = transactions.filter(t => t.id !== id);
-
-      // 1. Optimistic Update
       setTransactions(updatedTransactions);
-
-      // 2. Cache Update
       localStorage.setItem(`aureus_tx_${user!.id}`, JSON.stringify(updatedTransactions));
 
-      // 3. Remote Delete
       const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user!.id);
+        .from('transactions').delete().eq('id', id).eq('user_id', user!.id);
 
       if (error) {
         console.error('Error deleting transaction:', error.message);
         alert(`Erro ao excluir do banco: ${error.message}`);
-        loadTransactions(); // Revert to server state if delete failed
+        loadTransactions();
+      }
+    }
+  };
+
+  // ── Add asset ──────────────────────────────────────────────────────
+  const handleAddAsset = async (asset: PortfolioAsset) => {
+    if (!user) return;
+    const assetWithUser = { ...asset, user_id: user.id };
+
+    const updated = [assetWithUser, ...assets];
+    setAssets(updated);
+    localStorage.setItem(`aureus_assets_${user.id}`, JSON.stringify(updated));
+
+    const { error } = await supabase.from('assets').insert([assetWithUser]);
+    if (error) {
+      console.error('Asset save error:', error.message);
+      alert(`⚠️ Erro ao salvar ativo: ${error.message}`);
+    }
+  };
+
+  // ── Delete asset ───────────────────────────────────────────────────
+  const handleDeleteAsset = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este ativo?')) {
+      const updated = assets.filter(a => a.id !== id);
+      setAssets(updated);
+      localStorage.setItem(`aureus_assets_${user!.id}`, JSON.stringify(updated));
+
+      const { error } = await supabase.from('assets').delete().eq('id', id).eq('user_id', user!.id);
+      if (error) {
+        console.error('Error deleting asset:', error.message);
+        loadAssets();
+      }
+    }
+  };
+
+  // ── Add goal ───────────────────────────────────────────────────────
+  const handleAddGoal = async (goal: Goal) => {
+    if (!user) return;
+    const goalWithUser = { ...goal, user_id: user.id };
+
+    const updated = [goalWithUser, ...goals];
+    setGoals(updated);
+    localStorage.setItem(`aureus_goals_${user.id}`, JSON.stringify(updated));
+
+    const { error } = await supabase.from('goals').insert([goalWithUser]);
+    if (error) {
+      console.error('Goal save error:', error.message);
+      alert(`⚠️ Erro ao salvar meta: ${error.message}`);
+    }
+  };
+
+  // ── Delete goal ────────────────────────────────────────────────────
+  const handleDeleteGoal = async (id: string) => {
+    if (confirm('Tem certeza que deseja excluir esta meta?')) {
+      const updated = goals.filter(g => g.id !== id);
+      setGoals(updated);
+      localStorage.setItem(`aureus_goals_${user!.id}`, JSON.stringify(updated));
+
+      const { error } = await supabase.from('goals').delete().eq('id', id).eq('user_id', user!.id);
+      if (error) {
+        console.error('Error deleting goal:', error.message);
+        loadGoals();
       }
     }
   };
@@ -208,6 +301,8 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setTransactions([]);
+    setAssets([]);
+    setGoals([]);
   };
 
   // ── Auth loading spinner ───────────────────────────────────────────
@@ -244,19 +339,15 @@ const App: React.FC = () => {
         return <SettingsScreen user={user!} isPro={isPro} />;
       case ViewType.PORTFOLIO:
         return (
-          <div className="flex-1 flex items-center justify-center bg-background-dark text-slate-500">
-            <div className="text-center">
-              <span className="material-icons text-6xl mb-4 opacity-10">account_balance</span>
-              <h2 className="text-xl font-semibold text-slate-400">Portfolio View</h2>
-              <p className="text-sm">Consolidated asset management dashboard coming soon.</p>
-              <button
-                onClick={() => setCurrentView(ViewType.ANALYTICS)}
-                className="mt-6 px-6 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-primary/20 transition-all"
-              >
-                Go to Analytics
-              </button>
-            </div>
-          </div>
+          <PortfolioDashboard
+            assets={assets}
+            goals={goals}
+            transactions={transactions}
+            onAddAsset={() => setIsAssetModalOpen(true)}
+            onAddGoal={() => setIsGoalModalOpen(true)}
+            onDeleteAsset={handleDeleteAsset}
+            onDeleteGoal={handleDeleteGoal}
+          />
         );
       default:
         return (
@@ -292,6 +383,16 @@ const App: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddTransaction}
+      />
+      <AddAssetModal
+        isOpen={isAssetModalOpen}
+        onClose={() => setIsAssetModalOpen(false)}
+        onAdd={handleAddAsset}
+      />
+      <AddGoalModal
+        isOpen={isGoalModalOpen}
+        onClose={() => setIsGoalModalOpen(false)}
+        onAdd={handleAddGoal}
       />
     </div>
   );

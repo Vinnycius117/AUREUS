@@ -20,6 +20,34 @@ export interface Transaction {
   type: 'debit' | 'credit';
 }
 
+export type AssetCategory = 'Ações' | 'Renda Fixa' | 'FIIs' | 'Cripto' | 'Stocks' | 'Outros';
+export type AssetStatus = 'liquid' | 'invested';
+
+export interface PortfolioAsset {
+  id: string;
+  user_id?: string;
+  name: string;
+  category: AssetCategory;
+  status: AssetStatus;
+  current_value: number;
+  target_percent: number;
+  icon?: string;
+  created_at?: string;
+}
+
+export interface Goal {
+  id: string;
+  user_id?: string;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  deadline?: string;
+  icon?: string;
+  category?: string;
+  created_at?: string;
+}
+
+// Legacy interface kept for compatibility
 export interface Asset {
   name: string;
   description: string;
