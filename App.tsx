@@ -7,6 +7,7 @@ import AddTransactionModal from './components/AddTransactionModal';
 import PortfolioDashboard from './components/PortfolioDashboard';
 import AddAssetModal from './components/AddAssetModal';
 import AddGoalModal from './components/AddGoalModal';
+import ExportModal from './components/ExportModal';
 import SettingsScreen from './components/SettingsScreen';
 import { LoginScreen } from './components/LoginScreen';
 import { RegisterScreen } from './components/RegisterScreen';
@@ -30,6 +31,7 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAssetModalOpen, setIsAssetModalOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [isPro, setIsPro] = useState(false);
 
@@ -305,6 +307,15 @@ const App: React.FC = () => {
     setGoals([]);
   };
 
+  // ── Export (Pro-only) ────────────────────────────────────────────────
+  const handleExport = () => {
+    if (!isPro) {
+      alert('A exportação de relatórios é um recurso exclusivo do plano AUREUS PRO. Assine agora para desbloquear!');
+      return;
+    }
+    setIsExportModalOpen(true);
+  };
+
   // ── Auth loading spinner ───────────────────────────────────────────
   if (authLoading) {
     return (
@@ -326,13 +337,15 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (currentView) {
       case ViewType.ANALYTICS:
-        return <AnalyticsDashboard transactions={transactions} onDeleteTransaction={handleDeleteTransaction} />;
+        return <AnalyticsDashboard transactions={transactions} onDeleteTransaction={handleDeleteTransaction} isPro={isPro} onExport={handleExport} />;
       case ViewType.TRANSACTIONS:
         return (
           <TransactionsHistory
             transactions={transactions}
             onOpenModal={() => setIsModalOpen(true)}
             onDeleteTransaction={handleDeleteTransaction}
+            isPro={isPro}
+            onExport={handleExport}
           />
         );
       case ViewType.SETTINGS:
@@ -347,6 +360,8 @@ const App: React.FC = () => {
             onAddGoal={() => setIsGoalModalOpen(true)}
             onDeleteAsset={handleDeleteAsset}
             onDeleteGoal={handleDeleteGoal}
+            isPro={isPro}
+            onExport={handleExport}
           />
         );
       default:
@@ -393,6 +408,13 @@ const App: React.FC = () => {
         isOpen={isGoalModalOpen}
         onClose={() => setIsGoalModalOpen(false)}
         onAdd={handleAddGoal}
+      />
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        transactions={transactions}
+        assets={assets}
+        goals={goals}
       />
     </div>
   );

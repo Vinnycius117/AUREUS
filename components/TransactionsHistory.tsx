@@ -7,6 +7,8 @@ interface TransactionsHistoryProps {
   transactions: Transaction[];
   onOpenModal: () => void;
   onDeleteTransaction: (id: string) => void;
+  isPro?: boolean;
+  onExport?: () => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -15,7 +17,7 @@ const formatCurrency = (value: number) => {
 
 const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-const TransactionsHistory: React.FC<TransactionsHistoryProps> = ({ transactions, onOpenModal, onDeleteTransaction }) => {
+const TransactionsHistory: React.FC<TransactionsHistoryProps> = ({ transactions, onOpenModal, onDeleteTransaction, isPro, onExport }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('all'); // 'all' | 'YYYY-MM'
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
@@ -91,7 +93,7 @@ const TransactionsHistory: React.FC<TransactionsHistoryProps> = ({ transactions,
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-background-dark overflow-hidden">
       <div className="flex-1 overflow-auto custom-scrollbar scroll-smooth">
-        <Header title="Histórico de Lançamentos" subtitle="Livro Caixa Detalhado" />
+        <Header title="Histórico de Lançamentos" subtitle="Livro Caixa Detalhado" onExport={onExport} isPro={isPro} />
 
         <section className="px-8 py-6 border-b border-charcoal/50 flex flex-col lg:flex-row lg:items-center gap-6 bg-background-dark/80 backdrop-blur-md sticky top-20 z-10 shadow-sm">
           <div className="relative flex-1 max-w-lg">

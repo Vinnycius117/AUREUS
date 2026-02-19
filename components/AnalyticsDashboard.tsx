@@ -9,13 +9,15 @@ import { exportToPDF } from '../utils/exportReport';
 interface AnalyticsDashboardProps {
   transactions: Transaction[];
   onDeleteTransaction: (id: string) => void;
+  isPro?: boolean;
+  onExport?: () => void;
 }
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 };
 
-const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ transactions, onDeleteTransaction }) => {
+const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ transactions, onDeleteTransaction, isPro, onExport }) => {
   const stats = useMemo(() => {
     if (transactions.length === 0) {
       return {
@@ -214,7 +216,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ transactions, o
       <Header
         title="Resumo Patrimonial"
         subtitle="Sua Inteligência Financeira"
-        onExport={handleExport}
+        onExport={onExport}
+        isPro={isPro}
       />
 
       <div className="p-8 space-y-8 max-w-7xl mx-auto">

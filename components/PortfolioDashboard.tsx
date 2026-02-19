@@ -11,6 +11,8 @@ interface PortfolioDashboardProps {
     onAddGoal: () => void;
     onDeleteAsset: (id: string) => void;
     onDeleteGoal: (id: string) => void;
+    isPro?: boolean;
+    onExport?: () => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -28,7 +30,7 @@ const CATEGORY_CONFIG: Record<AssetCategory, { color: string; icon: string }> = 
 const CDI_MONTHLY = 0.009; // ~11.25% ao ano / 12
 
 const PortfolioDashboard: React.FC<PortfolioDashboardProps> = ({
-    assets, goals, transactions, onAddAsset, onAddGoal, onDeleteAsset, onDeleteGoal,
+    assets, goals, transactions, onAddAsset, onAddGoal, onDeleteAsset, onDeleteGoal, isPro, onExport,
 }) => {
     const [activeTab, setActiveTab] = useState<'overview' | 'goals'>('overview');
 
@@ -154,7 +156,7 @@ const PortfolioDashboard: React.FC<PortfolioDashboardProps> = ({
     return (
         <div className="flex-1 flex flex-col min-w-0 bg-background-dark overflow-hidden">
             <div className="flex-1 overflow-auto custom-scrollbar scroll-smooth">
-                <Header title="Carteira" subtitle="Gestão Patrimonial Inteligente" />
+                <Header title="Carteira" subtitle="Gestão Patrimonial Inteligente" onExport={onExport} isPro={isPro} />
 
                 <div className="p-8 pb-3 flex items-center justify-between sticky top-20 bg-background-dark z-20">
                     <div className="flex items-center gap-2 bg-card-dark/30 p-1 rounded-xl border border-charcoal/40">
