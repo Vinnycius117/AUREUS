@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Header from './Header';
 import { Transaction } from '../types';
 
@@ -18,6 +18,19 @@ const MONTH_NAMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Se
 const TransactionsHistory: React.FC<TransactionsHistoryProps> = ({ transactions, onOpenModal, onDeleteTransaction }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('all'); // 'all' | 'YYYY-MM'
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsMonthDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Build unique month options from transaction data
   const monthOptions = useMemo(() => {
@@ -36,6 +49,12 @@ const TransactionsHistory: React.FC<TransactionsHistoryProps> = ({ transactions,
         return { value: key, label: `${MONTH_NAMES[parseInt(month) - 1]} ${year}` };
       });
   }, [transactions]);
+
+  const currentLabel = useMemo(() => {
+    if (selectedMonth === 'all') return 'TODOS OS MESES';
+    const opt = monthOptions.find(o => o.value === selectedMonth);
+    return opt ? opt.label.toUpperCase() : 'TODOS OS MESES';
+  }, [selectedMonth, monthOptions]);
 
   const filteredTransactions = useMemo(() => {
     let filtered = transactions;
@@ -87,24 +106,49 @@ const TransactionsHistory: React.FC<TransactionsHistoryProps> = ({ transactions,
           </div>
 
           <div className="flex items-center gap-4 ml-auto">
-            {/* Month Filter Dropdown */}
-            <div className="relative group/select min-w-[180px]">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none group-focus-within/select:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-sm">calendar_month</span>
-              </div>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full appearance-none bg-card-dark border border-charcoal rounded-2xl py-3.5 pl-11 pr-10 text-[10px] font-black uppercase tracking-widest text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all cursor-pointer hover:bg-white/5 [color-scheme:dark]"
+            {/* Elegant Custom Month Filter Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
+                className={`flex items-center gap-3 px-5 py-3.5 bg-card-dark border ${isMonthDropdownOpen ? 'border-primary/50 ring-2 ring-primary/10' : 'border-charcoal'} rounded-2xl transition-all hover:bg-white/5 active:scale-[0.98] min-w-[200px] group`}
               >
-                <option value="all">TODOS OS MESES</option>
-                {monthOptions.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label.toUpperCase()}</option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-focus-within/select:rotate-180 transition-transform">
-                <span className="material-symbols-outlined text-sm">expand_more</span>
-              </div>
+                <span className={`material-symbols-outlined text-sm ${isMonthDropdownOpen ? 'text-primary' : 'text-slate-500'} group-hover:text-primary transition-colors`}>calendar_month</span>
+                <span className="flex-1 text-[10px] font-black uppercase tracking-widest text-slate-300 text-left">
+                  {currentLabel}
+                </span>
+                <span className={`material-symbols-outlined text-sm text-slate-500 transition-transform duration-300 ${isMonthDropdownOpen ? 'rotate-180 text-primary' : ''}`}>expand_more</span>
+              </button>
+
+              {/* Dropdown Menu */}
+              {isMonthDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1A1A1A]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.7)] overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="max-h-60 overflow-y-auto custom-scrollbar py-2">
+                    <button
+                      onClick={() => {
+                        setSelectedMonth('all');
+                        setIsMonthDropdownOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-white/5 ${selectedMonth === 'all' ? 'text-primary bg-primary/5' : 'text-slate-400'}`}
+                    >
+                      <span className="material-symbols-outlined text-sm opacity-60">all_inclusive</span>
+                      Todos os meses
+                    </button>
+                    {monthOptions.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => {
+                          setSelectedMonth(opt.value);
+                          setIsMonthDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-5 py-3 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-white/5 ${selectedMonth === opt.value ? 'text-primary bg-primary/5' : 'text-slate-400'}`}
+                      >
+                        <span className="material-symbols-outlined text-sm opacity-60">calendar_today</span>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <button
